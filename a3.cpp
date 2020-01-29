@@ -3,6 +3,7 @@
 #include <math.h>
 #include<string>
 #include<limits>
+#include<stack>
 #include <cfloat>
 
 using namespace std; 
@@ -45,11 +46,20 @@ public:
         temp->y= this->m*temp->x+this->c; 
         return *temp;
     }
-
+    // point find_intercept(segment l2)
+    // {
+    //     double m=(l2.p2.y-l2.p1.y)/(l2.p2.x-l2.p1.x);
+    //     double c=l2.p2.y-m*l2.p2.x;
+    //     point *temp=new point();
+    //     temp->x= -(c-this->c)/(m-this->m);
+    //     temp->y= this->m*temp->x+this->c; 
+    //     return *temp;
+    // }
 };
 struct segment
 {
     int line_no;
+    line line_data;
     point p1;
     point p2;
 };
@@ -68,20 +78,60 @@ segment* new_segment(int line_no, point x, point y)
     ans->line_no=line_no;
     return ans;
 }
+segment* new_segment(line line_data, point x, point y)
+{
+    segment *ans=new segment;
+    ans->p1.x=x.x;
+    ans->p1.y=x.y;
+    ans->p2.x=y.x;
+    ans->p2.y=y.y;
+    ans->line_data.m=line_data.m;
+    ans->line_data.c=line_data.c;
+    ans->line_data.line_no=line_data.line_no;
+    ans->line_no=line_data.line_no;
+
+    return ans;
+}
+
+void print_segment_arr(segment **m1, int n)
+{
+    for(int i=0; i<n; i++)
+    {
+        if(m1[i]!=NULL) 
+        {
+            cout<<"Line: "<<m1[i]->line_no<<" ";
+            m1[i]->p1.print();
+            cout<<" To ";
+            m1[i]->p2.print();
+            cout<<"\n";
+        }
+    }
+}
+void PrintStack(stack<segment *> s) 
+{ 
+    if (s.empty()) return; 
+    segment* x = s.top(); 
+    s.pop(); 
+    PrintStack(s);
+    cout<<"Line: "<<x->line_no<<" ";
+    x->p1.print();
+    cout<<" To ";
+    x->p2.print();
+    cout<<"\n"; 
+    s.push(x); 
+} 
 segment **method1(int n, line* lines)
 {
     line* smallest_line;
     double smallest=DBL_MAX;
     for(int i=0; i<n; i++)
     {   
-        // lines[i].print();
         if(smallest>lines[i].m) 
         {
             smallest_line=&lines[i];
             smallest=lines[i].m;
         }
     }
-    // cout<<"smallest line_no: "<<smallest_line->line_no<<endl;;
     point intercept[n][n];
     for(int i=0; i<n; i++)
     {
@@ -99,7 +149,7 @@ segment **method1(int n, line* lines)
     ans[0]=new_point(current_point.x, current_point.y); //first point at -inf
     int count=0;
     
-    segment *ans_ret[n];
+    segment **ans_ret=new segment*[n];
     for(int i=0; i<n; i++) ans_ret[i]=NULL;
 
     int current_line=smallest_line->line_no;
@@ -144,85 +194,56 @@ segment **method1(int n, line* lines)
 void merge(line *arr, int l, int m, int r);
 void mergeSort(line *lines, int l, int r); 
 
-void print_segment_arr(segment **m1, int n)
-{
-    for(int i=0; i<n; i++)
-    {
-        if(m1[i]!=NULL) 
-        {
-            cout<<"Line: "<<m1[i]->line_no<<" ";
-            m1[i]->p1.print();
-            cout<<" To ";
-            m1[i]->p2.print();
-            cout<<"\n";
-        }
-    }
-}
-segment **method2(int n, line* lines)
+// point is_intersect(segment seg, line l, line *lines)
+// {
+//     point intersect=l.find_intercept(lines[seg.line_no]);
+//     if( ( intersect.x<seg.p2.x && intersect.x>=seg.p1.x )&&( intersect.y>seg.p2.y && intersect.y<seg.p1.y )) return true;
+//     return false;
+// }
+stack<segment *> method2(int n, line* lines)
 {
     mergeSort(lines, 0, n-1);
     
     cout<<"Sorted Lines: "<<endl;
     for(int i=0; i<n; i++)
     {   
-        // lines[i].line_nos
         lines[i].print();
     }
-    point minf(-DBL_MAX, DBL_MAX);
+    point minfx(-DBL_MAX, DBL_MAX);
     point minfy(DBL_MAX, -DBL_MAX);
     point inf(DBL_MAX, DBL_MAX);
-
-    segment *ans_ret[n];
-    for(int i=0; i<n; i++) ans_ret[i]=NULL;
-    ans_ret[0]=new_segment(lines[0].line_no, minf, minfy);
-    int a=(minfy.y==-DBL_MAX );
-    cout<< a<<endl;
-    print_segment_arr(ans_ret, n);
+    stack<segment *> ans_ret;
+    ans_ret.push(new_segment(lines[0], minfx, minfy));
     cout<<"Starting Loop"<<endl;
     for(int i=1; i<n; i++) //get the next line index(sorted) to add
     {
-        int count=0;
-        for(int i=0; i<n; i++) if(ans_ret[i]!=NULL) count++;
-        cout<<"No in stack: "<<count<<endl;
-        
-        //case first line intersect
-        point intersect_l0=lines[0].find_intercept(lines[i]);
-        if( ( intersect_l0.x<ans_ret[0]->p2.x && intersect_l0.x>=ans_ret[0]->p1.x )&&( intersect_l0.y>ans_ret[0]->p2.y && intersect_l0.y<ans_ret[0]->p1.y ))
+        while(1)
         {
-            for(int i=2; i<n; i++) ans_ret[i]=NULL;
-            ans_ret[0]->p2.x=intersect_l0.x;
-            ans_ret[0]->p2.y=intersect_l0.y;
-            ans_ret[1]=new_segment(lines[i].line_no, intersect_l0, intersect_l0);
-            if(lines[i].m>0) 
+            int a; 
+            cin>>a;
+            segment *top=ans_ret.top();
+            point intersect=lines[i].find_intercept(top->line_data); //point of intersection between line and segment
+            if(intersect.x < top->p1.x) 
             {
-                ans_ret[1]->p2.x=inf.x;
-                ans_ret[1]->p2.y=inf.y;
+                ans_ret.pop();
+                continue;
             }
             else
             {
-                ans_ret[1]->p2.x=minfy.x;
-                ans_ret[1]->p2.y=minfy.y;
+                segment *temp;
+                if(lines[i].m > 0)
+                {
+                    temp=new_segment(lines[i], intersect, inf);
+                }
+                else temp=new_segment(lines[i], intersect, minfy);
+                top->p2.x=intersect.x;
+                top->p2.y=intersect.y;
+                ans_ret.pop();
+                ans_ret.push(top);
+                ans_ret.push(temp);
+                break;
             }
         }
-        //case last line intersect
-        point intersect_ll=lines[count-1].find_intercept(lines[i]);
-        if( ( intersect_ll.x<ans_ret[count-1]->p2.x && intersect_l0.x>=ans_ret[count-1]->p1.x )&&( intersect_l0.y>ans_ret[count-1]->p2.y && intersect_l0.y<ans_ret[count-1]->p1.y ))
-        {
-            if(ans_ret[count-1]->p2.x==DBL_MAX && ans_ret[count-1]->p2.y ==DBL_MAX) //check if last parent is +inf
-            {
-                //need to update just the last segment
-                ans_ret[count-1].line_no=lines[i].line_no;
-                ans_ret[count-1].p1.x=intersect_ll.x;
-                ans_ret[count-1].p1.y=intersect_ll.y;
-            }
-        }
-
-        //case in the middle of first and last point intersect
-        //update stack according to the intersection of the point with line
-
-        print_segment_arr(ans_ret, n);
-        cout<<"------------------------"<<endl;
-
     }
     return ans_ret;
 }
@@ -244,22 +265,13 @@ int main()
         lines[i].print();
     }
     cout<<"\nMethod 1:"<<endl;
-    segment **m1=method1(n, lines);
-    for(int i=0; i<n; i++)
-    {
-        if(m1[i]!=NULL) 
-        {
-            cout<<"Line: "<<m1[i]->line_no<<" ";
-            m1[i]->p1.print();
-            cout<<" To ";
-            m1[i]->p2.print();
-            cout<<"\n";
-        }
-    }
+    segment **m1;
+    m1=method1(n, lines);
+    print_segment_arr(m1, n);
 
     cout<<"\nMethod 2:"<<endl;
-    segment **m2=method2(n, lines);
-
+    stack<segment*> m2=method2(n, lines);
+    PrintStack(m2);
     return 0; 
 } 
 void merge(line* arr, int l, int m, int r) 
