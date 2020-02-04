@@ -2,7 +2,7 @@
 #include <iostream> 
 #include <math.h>
 #include<string>
-#include<limits>
+#include<limits.h>
 #include<stack>
 #include <cfloat>
 using namespace std;
@@ -86,7 +86,7 @@ void greedy2(int input)
 	}
 	cout<<"Number of operations= " <<count<<"\n"<<endl;
 }
-void greedy3(int input, int k, int *a)
+int greedy3p(int input, int k, int *a)
 {
 	int temp=input;
 	int count=0;
@@ -109,15 +109,21 @@ void greedy3(int input, int k, int *a)
 			count++;
 			continue;
 		}
-		int max2=-1; //store in max2 the action with max 2 factors
+		int max2=a[0]; //store in max2 the action with max 2 factors(subset of k)
 		for(int i=0; i<k; i++)
 		{
 			if(input+a[i]<=0) continue;
 			int tempfac2=fac2(input+a[i]);
-			if(tempfac2>max2) max2=a[i]; 
-			if(tempfac2==fac2(max2)) //tie between current and previous best 
+			if(tempfac2>fac2(input+max2)) max2=a[i]; 
+			// if(input==613) cout<<input<<" "<<a[i]<<" "<<tempfac2<<endl;
+			if(tempfac2==fac2(input+max2)) //tie between current and previous best 
 			{
-				if(input+a[i] < max2) max2=input+a[i]; 
+				// if(input==613)
+				// {
+				// 	cout<<"tie between "<< max2<< " "<< a[i]<<endl;
+				// }
+				if(input+a[i] < input+max2) max2=a[i]; 
+				// if(input+a[i] < max2) max2=input+a[i]; 
 			}
 
 		}
@@ -128,6 +134,43 @@ void greedy3(int input, int k, int *a)
 		// scanf("%d", &aa);
 	}
 	cout<<"Number of operations= " <<count<<"\n"<<endl;
+	return count;
+}
+int greedy3(int input, int k, int *a)
+{
+	int temp=input;
+	int count=0;
+	while(1)
+	{
+		if(input==1) break;
+		if(input%2==0) 
+		{
+			input=input/2;
+			count++;
+			continue;
+		}
+		if(input==3)
+		{
+			input--;
+			count++;
+			continue;
+		}
+		int max2=a[0]; //store in max2 the action with max 2 factors(subset of k)
+		for(int i=0; i<k; i++)
+		{
+			if(input+a[i]<=0) continue;
+			int tempfac2=fac2(input+a[i]);
+			if(tempfac2>fac2(input+max2)) max2=a[i]; 
+			if(tempfac2==fac2(input+max2)) //tie between current and previous best 
+			{
+				if(input+a[i] < input+max2) max2=a[i]; 
+			}
+
+		}
+		input=input+max2;
+		count++;
+	}
+	return count;
 }
 int pow2(int input)
 {
@@ -142,67 +185,7 @@ int pow2(int input)
 		if(input%2!=0) return -1;
 	} 
 }
-int *data;
-struct ret
-{
-	int optimal;
-	int depth;
-};
-int get_optimal(int input, int k, int *a, int max)
-{
-	cout<<"input: "<<input<<endl;
-	int aa;
-	cin>>aa;
-	for(int i=0; i<max; i++) cout<<data[i]<<" ";
-	cout<<endl;		
-	if(input>max) return 9999;
-	if(pow2(input)>0)
-	{
-		int ans=pow2(input);
-		data[input]=ans;
-		cout<<"returning default: "<<ans<<endl;
-		return ans;
-	}
-	if(input%2==0) //even
-	{
-		cout<<"even"<<endl;
-		//get min
-		int min=99999999;
-		for(int i=0; i<k; i++)
-		{
-			int optimal;
-			if(data[input+a[i]]>0) optimal=data[input+a[i]];
-			else
-			{
-				optimal=get_optimal(input+a[i], k, a, max);
-				data[input+a[i]]=optimal;
-			} 
-			if(optimal<min) min=optimal;
-		}
-		int optimal_div=get_optimal(input/2, k, a, max);
-		if(optimal_div<min) min=optimal_div;
-		cout<<"returning"<<endl;
-		return 1+min;
-	}
-	else 
-	{
-		cout<<"odd"<<endl;
-		int min=99999999;
-		for(int i=0; i<k; i++)
-		{
-			int optimal;
-			if(data[input+a[i]]>0) optimal=data[input+a[i]];
-			else
-			{
-				optimal=get_optimal(input+a[i], k, a, max);
-				data[input+a[i]]=optimal;
-			} 
-			if(optimal<min) min=optimal;
-		}
-		cout<<"returning"<<endl;
-		return 1+min;
-	}
-}
+
 int optimal(int input, int k, int *a) 
 {
 	int itr=log(input)/log(2);
@@ -210,23 +193,47 @@ int optimal(int input, int k, int *a)
 	for(int i=0; i<k; i++) if(a[i]>max) max=a[i];
 	max=max+input;
 	cout<<"Max=" <<max<<endl;;
-	data=new int[max]; 
-	for(int i=0; i<max; i++) data[i]=-1;
-	return get_optimal(input, k, a, max);
+	int *data=new int[max];
+	for(int i=1; i<max; i++)
+	{
+		data[i]=greedy3(i, k, a);
+	} 
+	for(int i=0; i<itr; i++)
+	{
+		cout<<i<<endl;
+		for(int j=1; j<max; j++) //iteration over max
+		{
+			int temp=INT_MAX;
+			for(int l=0; l<k; l++)
+			{
+				if(j+a[l]>=max) continue;
+				if(j+a[l]<1) continue;
+				if(data[j+a[l]]<temp) temp=data[j+a[l]];
+			}
+			if(j%2==0)
+			{
+				if(temp>data[j/2]) temp=data[j/2];
+			}
+			temp=1+temp;
+			if(data[j]>temp) data[j]=temp;
+		}
+	}
+	return data[input];
 }
+
 int main() 
 { 
 	int input;
 	cout<<"Enter Number: ";
 	cin>>input;
-	// greedy1(input);
-	// greedy2(input);
+	greedy1(input);
+	greedy2(input);
 	
 	cout<<"Enter k:";
 	int k;
 	cin>>k;
 	int a[k];
 	for(int i=0; i<k; i++) cin>>a[i];
-	// greedy3(input, k, a);
+	greedy3p(input, k, a);
 	cout<<"Optimal Soln: "<<optimal(input, k, a)<<endl;
 }
