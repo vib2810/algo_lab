@@ -22,49 +22,136 @@ public:
 	}
 	void print(node *head, int level=0)
 	{
-		if(head==NULL) return;
-		for(int i=0; i<level; i++) cout<<"\t";
+		for(int i=0; i<level-1; i++) cout<<"   |     ";
+		if(level!=0) cout<<"   +-----";
+		if(head==NULL) 
+		{
+			cout<<"|B NULL|"<<endl;
+			return;
+		}
 		if(head->color==1) cout<<"|R ";
 		else cout<<"|B ";
 		cout<<head->value<<"|"<<endl;
+		if(head->big==NULL && head->small==NULL) return;
 		print(head->big, level+1);
 		print(head->small, level+1);
 		return;
 	}
+	node* uncle(node* data)
+	{
+		if(data==NULL || data->parent==NULL || data->parent->parent==NULL) return NULL;
+		if(data->parent->value > data->parent->parent->value) return data->parent->parent->small;
+		return data->parent->parent->big;
+	}
+	void fix_violation(node* ins)
+	{
+		if(ins==this->root) 
+		{
+			ins->color=0;
+			return;
+		}
+		// cout<<"RAW for vio_fix: "<<ins->value<<endl;
+		// print();
+		//detect violation
+		if(ins->parent->color == ins->color)
+		{
+			// cout<<"violation detected"<<endl;
+			node* uncle_p=uncle(ins);
+			bool col_uncle;
+			if(uncle_p==NULL) col_uncle=0;
+			else col_uncle=uncle_p->color;
+			if(col_uncle==1) //uncle is red
+			{
+				// cout<<"Uncle is red "<<endl;
+				//recolor parent, gp, uncle
+				ins->parent->color=!ins->parent->color;
+				ins->parent->parent->color=!ins->parent->parent->color;
+				uncle_p->color=!uncle_p->color;
+				fix_violation(ins->parent->parent);
+			}
+			if(col_uncle==0) //uncle is black
+			{
+				// cout<<"Uncle is black "<<endl;
+				bool res1=ins->parent->value > ins->value, res2=ins->parent->value > ins->parent->parent->value;
+				if((res1==1 && res2==1)||(res1==0 && res2==0)) //case triangle
+				{
+					if(res1==1)
+					{ 
+						// cout<<"Case Triangle Rotate right"<<endl;
+						rotate_right(ins->parent);
+						fix_violation(ins->big);
+					}
+					else
+					{
+						// cout<<"Case Triangle Rotate left"<<endl;
+						rotate_left(ins->parent);
+						fix_violation(ins->small);
+					}
+				}
+				else //case line
+				{
+					if(res2==1) //parent right of grand, rotate rotate_left
+					{
+						// cout<<"Case right line, rotate left"<<endl;
+						rotate_left(ins->parent->parent);
+						ins->parent->color=!ins->parent->color;
+						ins->parent->small->color=!ins->parent->small->color;
+					}
+					if(res2==0) //parent to left of grand, rotate right
+					{
+						// cout<<"Case left line, rotate_right"<<endl;
+						rotate_right(ins->parent->parent);
+						ins->parent->color=!ins->parent->color;
+						ins->parent->big->color=!ins->parent->big->color;
+					}
+				}
+			}
+		}
+	}
 	void insert(int value)
 	{
-		if(root==NULL)
+		node *ins=insert(value, 1, this->root);
+	}
+	void insertrbt(int value)
+	{
+		node *ins=insert(value, 1, this->root);
+		if(ins!=NULL) fix_violation(ins);
+		else return;
+	}
+	node* insert(int value, bool color, node* head)
+	{
+		if(this->root==NULL)
 		{
 			root= new node;
 			root->value=value;
+			root->color=color;
 			root->parent=NULL;
 			root->big=NULL, root->small=NULL;
-			return;
+			return this->root;
 		}
-		node *temp=root;
-		while(1)
-		{
-			if(temp->value < value && temp->big!=NULL) temp=temp->big;
-			else if(temp->value >= value && temp->small!=NULL) temp=temp->small;
-			else break;
-		}
-		if(temp->value < value) //insert at big
+		if(head->value < value && head->big!=NULL) return insert(value, color, head->big);
+		else if(head->value > value && head->small!=NULL) return insert(value, color, head->small); 
+		else if(head->value ==  value) return NULL;
+		if(head->value < value && head->big==NULL)
 		{
 			node *tempb=new node;
-			tempb->parent=temp;
+			tempb->parent=head;
+			tempb->color=color; //red
 			tempb->big=NULL, tempb->small=NULL;
 			tempb->value=value;
-			temp->big=tempb;
+			head->big=tempb;
+			return tempb;
 		}
-		if(temp->value >= value) //insert at small
+		if(head->value >= value && head->small==NULL) //insert at small
 		{
 			node *temps=new node;
-			temps->parent=temp;
+			temps->parent=head;
+			temps->color=color; //red
 			temps->big=NULL, temps->small=NULL;
 			temps->value=value;
-			temp->small=temps;
+			head->small=temps;
+			return temps;
 		}
-		return;
 	}
 	void rotate_left(node* y)
 	{
@@ -125,35 +212,10 @@ public:
 		x->parent=y;
 
 	}
-	void rot()
-	{
-		rotate_right(this->root->big);
-		cout<<"right"<<endl;
-		print();
-
-		rotate_left(this->root->big);
-		cout<<"left"<<endl;
-		print();
-	}
-	bool remove(int value)
-	{
-		// if(this->root->value==value)
-		// {
-		// 	this->root->big
-		// 	this->root->small
-		// }
-	}
 };
 int main()
 {
 	rbtree t1;
-	t1.insert(12);
-	t1.insert(1);
-	t1.insert(11);
-	t1.insert(9);
-	t1.insert(10);
-	t1.insert(2);
-	for(int i=0; i<10; i++) t1.insert(rand()%50);
+	for(int i=0; i<200; i++) t1.insertrbt(rand()%3000);
 	t1.print();
-	t1.rot();
 }
