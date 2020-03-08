@@ -160,7 +160,7 @@ public:
 		if(x==NULL) return;
 		if(parent!=NULL)
 		{
-			if(y->value > parent->value)
+			if(y->value == parent->big->value)
 			{
 				parent->big=x;
 			}
@@ -170,9 +170,9 @@ public:
 			}
 			x->parent=parent;
 		}
-		else //this is the root, update new root
+		else //this is the head, update new head
 		{
-			this->root=x;
+			this->head=x;
 			x->parent=NULL;
 		}
 		y->big=x->small;
@@ -189,7 +189,7 @@ public:
 		if(y==NULL) return;
 		if(parent!=NULL)
 		{
-			if(y->value > parent->value)
+			if(x->value == parent->big->value)
 			{
 				parent->big=y;
 			}
@@ -199,9 +199,9 @@ public:
 			}
 			y->parent=parent;
 		}
-		else //this is the root, update new root
+		else //this is the head, update new head
 		{
-			this->root=y;
+			this->head=y;
 			y->parent=NULL;
 		}
 
@@ -210,7 +210,6 @@ public:
 		
 		y->big=x;
 		x->parent=y;
-
 	}
 };
 int main()
