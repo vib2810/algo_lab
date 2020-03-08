@@ -13,26 +13,26 @@ class tree
 		node* small=NULL; 
 		node* parent=NULL; 
 	};
-	node *head=NULL;
+	node *root=NULL;
 	int size;
 public:
 	void print()
 	{
-		print(this->head);
+		print(this->root);
 	}
-	void print(node *head, int level=0)
+	void print(node *root, int level=0)
 	{
 		for(int i=0; i<level-1; i++) cout<<"  |     ";
 		if(level!=0) cout<<"  +-----";
-		if(head==NULL) 
+		if(root==NULL) 
 		{
 			cout<<"|NULL|"<<endl;
 			return;
 		}
-		cout<<"|"<<head->value<<"|"<<endl;
-		if(head->big==NULL && head->small==NULL) return;
-		print(head->big, level+1);
-		print(head->small, level+1);
+		cout<<"|"<<root->value<<"|"<<endl;
+		if(root->big==NULL && root->small==NULL) return;
+		print(root->big, level+1);
+		print(root->small, level+1);
 		return;
 	}
 	node* new_node(node* parent, int value)
@@ -45,51 +45,51 @@ public:
 	}
 	void readtree()
 	{
-		this->head=new_node(NULL, 0);
-		this->head=readtree(this->head, 1);
+		this->root=new_node(NULL, 0);
+		this->root=readtree(this->root, 1);
 	}
-	node* readtree(node *head, int n)
+	node* readtree(node *root, int n)
 	{
 		//base case
-		if(n==0) return head;
+		if(n==0) return root;
 		this->size++;
 		int value, a, b;
 		cin>>value>>a>>b;
-		head->value=value;		
+		root->value=value;		
 		if(a!=0)
 		{
-			head->small=new_node(head, 0);
-			readtree(head->small, a);
+			root->small=new_node(root, 0);
+			readtree(root->small, a);
 		}
-		else head->small==NULL;
+		else root->small==NULL;
 		if(b!=0)
 		{
-			head->big=new_node(head, 0);
-			readtree(head->big, b);
+			root->big=new_node(root, 0);
+			readtree(root->big, b);
 		}
-		else head->big==NULL;
-		return head;
+		else root->big==NULL;
+		return root;
 	}
 	void makeskew()
 	{
-		makeskew(this->head);
+		makeskew(this->root);
 	}
-	void makeskew(node *head)
+	void makeskew(node *root)
 	{
 		int count=0;
-		while(head->small!=NULL)
+		while(root->small!=NULL)
 		{
-			rotate_right(head);
-			head=head->parent;
+			rotate_right(root);
+			root=root->parent;
 		}
-		if(head->big!=NULL) makeskew(head->big);
+		if(root->big!=NULL) makeskew(root->big);
 		return;
 	}
 	void bubbleSort() 
 	{ 
 		for(int i=0; i<this->size; i++)
 		{
-			node* j=this->head;
+			node* j=this->root;
 			while(j->big!=NULL)
 			{
 				if(j->big->value < j->value) swap(j, j->big);
@@ -107,7 +107,7 @@ public:
 	} 
 	void rebalance()
 	{
-		rebalance(this->head, 1);
+		rebalance(this->root, 1);
 	}
 	void rebalance(node *tree_root, int sense) //sense 1 for right
 	{
@@ -157,18 +157,18 @@ public:
 	void traversal()
 	{
 		cout<<"Preorder traversal: "<<endl;
-		preorder(this->head);
+		preorder(this->root);
 		cout<<endl;
 		cout<<"Inorder traversal: "<<endl;
-		inorder(this->head);
+		inorder(this->root);
 		cout<<endl;
 		return;
 	}
-	void swap_child(node* head)
+	void swap_child(node* root)
 	{
-		node* temp=head->small;
-		head->small=head->big;
-		head->big=temp;
+		node* temp=root->small;
+		root->small=root->big;
+		root->big=temp;
 		return;
 	}
 	void rotate_left(node* y)
@@ -178,19 +178,26 @@ public:
 		if(x==NULL) return;
 		if(parent!=NULL)
 		{
-			if(y->value == parent->big->value)
+			if(parent->big != NULL)
 			{
-				parent->big=x;
+				if(y->value == parent->big->value)
+				{
+					parent->big=x;
+				}
+				else
+				{
+					parent->small=x;
+				}
 			}
-			else
+			else //parents big is NULL
 			{
 				parent->small=x;
 			}
 			x->parent=parent;
 		}
-		else //this is the head, update new head
+		else //this is the root, update new root
 		{
-			this->head=x;
+			this->root=x;
 			x->parent=NULL;
 		}
 		y->big=x->small;
@@ -198,7 +205,6 @@ public:
 
 		x->small=y;
 		y->parent=x;
-
 	}
 	void rotate_right(node* x)
 	{
@@ -207,19 +213,26 @@ public:
 		if(y==NULL) return;
 		if(parent!=NULL)
 		{
-			if(x->value == parent->big->value)
+			if(parent->big!=NULL)
 			{
-				parent->big=y;
+				if(x->value == parent->big->value)
+				{
+					parent->big=y;
+				}
+				else
+				{
+					parent->small=y;
+				}
 			}
-			else
+			else //parent big is NULL
 			{
 				parent->small=y;
 			}
 			y->parent=parent;
 		}
-		else //this is the head, update new head
+		else //this is the root, update new root
 		{
-			this->head=y;
+			this->root=y;
 			y->parent=NULL;
 		}
 
@@ -228,12 +241,11 @@ public:
 		
 		y->big=x;
 		x->parent=y;
-
 	}
-	int get_size(node *head, int sense)
+	int get_size(node *root, int sense)
 	{
-		if(head==NULL) return 0;
-		node* temp=head;
+		if(root==NULL) return 0;
+		node* temp=root;
 		int count=0;
 		while(temp!=NULL)
 		{

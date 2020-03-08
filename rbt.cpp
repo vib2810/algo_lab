@@ -20,21 +20,21 @@ public:
 	{
 		print(this->root);
 	}
-	void print(node *head, int level=0)
+	void print(node *point_head, int level=0)
 	{
 		for(int i=0; i<level-1; i++) cout<<"   |     ";
 		if(level!=0) cout<<"   +-----";
-		if(head==NULL) 
+		if(point_head==NULL) 
 		{
 			cout<<"|B NULL|"<<endl;
 			return;
 		}
-		if(head->color==1) cout<<"|R ";
+		if(point_head->color==1) cout<<"|R ";
 		else cout<<"|B ";
-		cout<<head->value<<"|"<<endl;
-		if(head->big==NULL && head->small==NULL) return;
-		print(head->big, level+1);
-		print(head->small, level+1);
+		cout<<point_head->value<<"|"<<endl;
+		if(point_head->big==NULL && point_head->small==NULL) return;
+		print(point_head->big, level+1);
+		print(point_head->small, level+1);
 		return;
 	}
 	node* uncle(node* data)
@@ -118,7 +118,7 @@ public:
 		if(ins!=NULL) fix_violation(ins);
 		else return;
 	}
-	node* insert(int value, bool color, node* head)
+	node* insert(int value, bool color, node* point_head)
 	{
 		if(this->root==NULL)
 		{
@@ -129,27 +129,27 @@ public:
 			root->big=NULL, root->small=NULL;
 			return this->root;
 		}
-		if(head->value < value && head->big!=NULL) return insert(value, color, head->big);
-		else if(head->value > value && head->small!=NULL) return insert(value, color, head->small); 
-		else if(head->value ==  value) return NULL;
-		if(head->value < value && head->big==NULL)
+		if(point_head->value < value && point_head->big!=NULL) return insert(value, color, point_head->big);
+		else if(point_head->value > value && point_head->small!=NULL) return insert(value, color, point_head->small); 
+		else if(point_head->value ==  value) return NULL;
+		if(point_head->value < value && point_head->big==NULL)
 		{
 			node *tempb=new node;
-			tempb->parent=head;
+			tempb->parent=point_head;
 			tempb->color=color; //red
 			tempb->big=NULL, tempb->small=NULL;
 			tempb->value=value;
-			head->big=tempb;
+			point_head->big=tempb;
 			return tempb;
 		}
-		if(head->value >= value && head->small==NULL) //insert at small
+		if(point_head->value >= value && point_head->small==NULL) //insert at small
 		{
 			node *temps=new node;
-			temps->parent=head;
+			temps->parent=point_head;
 			temps->color=color; //red
 			temps->big=NULL, temps->small=NULL;
 			temps->value=value;
-			head->small=temps;
+			point_head->small=temps;
 			return temps;
 		}
 	}
@@ -160,19 +160,26 @@ public:
 		if(x==NULL) return;
 		if(parent!=NULL)
 		{
-			if(y->value == parent->big->value)
+			if(parent->big != NULL)
 			{
-				parent->big=x;
+				if(y->value == parent->big->value)
+				{
+					parent->big=x;
+				}
+				else
+				{
+					parent->small=x;
+				}
 			}
-			else
+			else //parents big is NULL
 			{
 				parent->small=x;
 			}
 			x->parent=parent;
 		}
-		else //this is the head, update new head
+		else //this is the root, update new root
 		{
-			this->head=x;
+			this->root=x;
 			x->parent=NULL;
 		}
 		y->big=x->small;
@@ -189,19 +196,26 @@ public:
 		if(y==NULL) return;
 		if(parent!=NULL)
 		{
-			if(x->value == parent->big->value)
+			if(parent->big!=NULL)
 			{
-				parent->big=y;
+				if(x->value == parent->big->value)
+				{
+					parent->big=y;
+				}
+				else
+				{
+					parent->small=y;
+				}
 			}
-			else
+			else //parent big is NULL
 			{
 				parent->small=y;
 			}
 			y->parent=parent;
 		}
-		else //this is the head, update new head
+		else //this is the root, update new root
 		{
-			this->head=y;
+			this->root=y;
 			y->parent=NULL;
 		}
 
@@ -210,11 +224,16 @@ public:
 		
 		y->big=x;
 		x->parent=y;
+
 	}
 };
 int main()
 {
+	cout<<"Red Black Tree"<<endl;
 	rbtree t1;
-	for(int i=0; i<200; i++) t1.insertrbt(rand()%3000);
+	for(int i=0; i<3000; i++) 
+	{
+		t1.insertrbt(rand()%3000);
+	}
 	t1.print();
 }
