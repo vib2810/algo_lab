@@ -247,9 +247,10 @@ public:
 	}
 	void bst_free(node* node)
 	{
-		if(node->big!=NULL) delete node->big;
-		if(node->small!=NULL) delete node->small;
+		if(node->big!=NULL) bst_free(node->big);
+		if(node->small!=NULL) bst_free(node->small);
 		delete node;
+		return;
 	}
 };
 bool bst_same(tree::node *t1, tree::node* t2)
@@ -259,6 +260,28 @@ bool bst_same(tree::node *t1, tree::node* t2)
 	if(t1!=NULL && t2==NULL) return false;
 	if(t1->value!=t2->value) return false;
 	if(bst_same(t1->small, t2->small)==true && bst_same(t1->big, t2->big)==true) return true;
+}
+bool checkall(vector<vector<ll> > sequences, vector<ll> data, int n)
+{
+	bst_tree t1;
+	t1.bst_cons(data, n);
+
+	bool flag = true; //assume all trees identical
+	for(ll i=0; i<sequences.size(); i++)
+	{
+		bst_tree t2;
+		t2.bst_cons(sequences[i], n);
+		if(bst_same(t1.root, t2.root)==true) 
+		{
+			t2.bst_free();
+		}
+		else 
+		{
+			flag=false; //trees not same, set flag false
+			t2.bst_free();
+		}
+	}
+	return flag;
 }
 int main()
 {
@@ -292,23 +315,7 @@ int main()
 	t1.bst_prn();
 	cout<<endl;
 
-	ll flag = true; //assume all tree identical
-	for(ll i=0; i<sequences.size(); i++)
-	{
-		bst_tree t2;
-		t2.bst_cons(sequences[i], n);
-		// cout<<"Tree with sequence "<<i<<endl;
-		// t2.print();
-		if(bst_same(t1.root, t2.root)==true) 
-		{
-			t2.bst_free();
-		}
-		else 
-		{
-			flag=false; //trees not same, set flag false
-			t2.bst_free();
-		}
-	}
+	bool flag = checkall(sequences, data, n);
 	if(flag==true)
 	{
 		cout<<"All trees are same"<<endl;
