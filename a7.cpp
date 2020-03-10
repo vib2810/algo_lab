@@ -257,6 +257,7 @@ bool bst_same(tree::node *t1, tree::node* t2)
 	if(t1==NULL && t2==NULL) return true;
 	if(t1==NULL && t2!=NULL) return false;
 	if(t1!=NULL && t2==NULL) return false;
+	if(t1->value!=t2->value) return false;
 	if(bst_same(t1->small, t2->small)==true && bst_same(t1->big, t2->big)==true) return true;
 }
 int main()
