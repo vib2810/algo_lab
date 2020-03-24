@@ -21,6 +21,12 @@ int ncr(int n, int r)
 }
 int countseq(int *data, int n)
 {
+	
+	cout<<"Input n= "<<n<<endl;
+	cout<<"Data: ";
+	for(int i=0; i<n; i++) cout<<data[i]<<" ";
+	cout<<endl;
+	
 	if(n<=2) return 1;
 	int l=0;
 	for(int i=0; i<n; i++) if(data[i]<data[0]) l++;
@@ -31,9 +37,9 @@ int countseq(int *data, int n)
 	cout<<"Input n= "<<n<<endl;
 	cout<<"Data: ";
 	for(int i=0; i<n; i++) cout<<data[i]<<" ";
+	cout<<endl;
 	
 	int counter1=0, counter2=0;
-	cout<<endl;
 	for(int i=1; i<n; i++)
 	{
 		if(data[i]<data[0])
