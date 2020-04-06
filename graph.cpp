@@ -18,27 +18,21 @@ public:
             cout<<endl;
         } 
     } 
+    void dfs(int node, vector<bool> &visited)
+    {
+        visited[node]=true;
+        cout<<node<<" ";
+        for(int i=0; i<adj[node].size(); i++) 
+        {
+            int child=adj[node][i];
+            if(visited[child]==0) dfs(child, visited);
+        }
+    }
     void dfs(int node)
     {
-        stack<int> s_dfs;
-        bool visited[n];
-        for(int i = 0; i < this->n; ++i) visited[i]=false;
-        s_dfs.push(node);
-        while(s_dfs.empty()==0)
-        {
-            int next=s_dfs.top();
-            s_dfs.pop();
-            if(visited[next]==false)
-            {
-                visited[next]=true;
-                cout<<next<<" ";
-            }
-            for(int i=0; i<adj[next].size(); i++) 
-            {
-                int child=adj[next][i];
-                if(visited[child]==false) s_dfs.push(child);
-            }
-        }
+        vector<bool> visited(n);
+        for(int i=0; i<n; i++) visited[i]=0;
+        dfs(node, visited);
         cout<<endl;
     }
     void bfs(int node)
